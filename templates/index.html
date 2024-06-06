@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YT Downloader</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="/static/app.js"></script>
+  </head>
+  <body>
+    <main>
+      <div class="nav">
+        <div class="left">YT-DOWNLOADER</div>
+        <div class="right"><button>Buy me a coffee</button></div>
+      </div>
+      <div class="hero">
+        <h1>Download YouTube Videos in High Quality for Free</h1>
+        <div class="input-div">
+          <input
+            type="text"
+            placeholder="Enter the YouTube video URL:"
+            id="link_from_web"
+          />
+          <button type="button" onclick="fetchVideoDetails()">Fetch Details</button>
+        </div>
+        <div id="video-details" style="display: none;">
+          <img id="thumbnail" src="" alt="Video Thumbnail">
+          <h2 id="title"></h2>
+          <p id="length"></p>
+          <form id="downloadForm" method="POST" action="/download">
+            <input type="hidden" id="hidden_url" name="url">
+            <button type="submit">Download</button>
+          </form>
+        </div>
+      </div>
+    </main>
+    <script>
+      function fetchVideoDetails() {
+        const url = document.getElementById('link_from_web').value;
+        if (!url) {
+          alert('Please enter a valid YouTube URL');
+          return;
+        }
+
+        fetch('/fetch_video_details', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ url: url })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            alert(data.error);
+            return;
+          }
+          document.getElementById('thumbnail').src = data.thumbnail_url;
+          document.getElementById('title').textContent = data.title;
+          document.getElementById('length').textContent = `Length: ${data.length} seconds`;
+          document.getElementById('hidden_url').value = url;
+          document.getElementById('video-details').style.display = 'flex';
+        })
+        .catch(error => {
+          console.error('Error fetching video details:', error);
+          alert('Failed to fetch video details');
+        });
+      }
+
+      document.getElementById('downloadForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent default form submission
+        const url = document.getElementById('hidden_url').value;
+        if (url) {
+          this.submit(); // Submit the form if URL is present
+        } else {
+          alert('No video URL provided');
+        }
+      });
+    </script>
+  </body>
+</html>
